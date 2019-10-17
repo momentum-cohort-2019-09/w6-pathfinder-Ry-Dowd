@@ -13,7 +13,30 @@ class Path:
     self.path = [position]
     self.elevation_change = []
     self.position = position
+    self.max_x = max(self.coordinates)[0]
+    self.max_y = max(self.coordinates)[1]
     print(self.position)
+    self.walk()
+    
+  def valid_steps(self):
+    current_x = self.position[0] 
+    current_y = self.position[1]    
+    
+  def valid_forward_steps(self):
+    current_x = self.position[0] 
+    current_y = self.position[1]
+    
+    return[(current_x+1, choice) for choice in range(current_y-1, current_y+2)if (0 <= choice <= self.max_y)]
+    
+  def choose_step(self):
+    valid_steps = self.valid_forward_steps()
+    print(valid_steps)
+    
+    
+  def walk(self):
+    if self.position[0]<= self.max_x:
+      self.choose_step()
+      # self.walk()
   
   
     
@@ -59,7 +82,7 @@ class MapData:
     
   def forge_random_path(self):
     y_start = r.randrange(max(self.coordinates)[1]+1)
-    self.paths.append(Path(self, (0,y_start)))
+    self.paths.append(Path(self, (0, y_start)))
 
 if __name__ == "__main__":
   new_map = MapData('elevation_small.txt')
