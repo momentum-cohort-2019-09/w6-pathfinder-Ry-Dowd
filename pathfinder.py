@@ -1,5 +1,4 @@
 from PIL import Image
-import pprint
 import random as r
 
 class Path:
@@ -18,25 +17,37 @@ class Path:
     print(self.position)
     self.walk()
     
-  def valid_steps(self):
-    current_x = self.position[0] 
-    current_y = self.position[1]    
+  # def valid_steps(self):
+  #   current_x = self.position[0] 
+  #   current_y = self.position[1]    
     
   def valid_forward_steps(self):
     current_x = self.position[0] 
     current_y = self.position[1]
     
     return[(current_x+1, choice) for choice in range(current_y-1, current_y+2)if (0 <= choice <= self.max_y)]
+   
+  def choose_step(self, valid_steps):
+    current_elevation = self.coordinates[self.position]
+    options_dict = {step:(abs(current_elevation-self.coordinates[step])+r.random()) for step in valid_steps}
+    choice = min(options_dict.items(), key = lambda x:x[1])
+    self.elevation_change.append(int(choice[1]))
+    return choice[0]
     
-  def choose_step(self):
+  def take_step(self):
     valid_steps = self.valid_forward_steps()
-    print(valid_steps)
+    self.position = self.choose_step(valid_steps)
+    self.path.append(self.position)
+    
     
     
   def walk(self):
-    if self.position[0]<= self.max_x:
-      self.choose_step()
-      # self.walk()
+    while self.position[0] < self.max_x:
+      self.take_step()
+    else:
+      self.total_elevation_change = sum(self.elevation_change)
+      print(self.total_elevation_change)
+      # print(self.path)
   
   
     
@@ -49,6 +60,7 @@ class MapData:
     self.data = elevation_file
     self.paths = []
     self.coordinates = {}
+    self.path_set = set()
   
   def assign_coordinates(self, data):
     with open(data) as data:
@@ -78,14 +90,38 @@ class MapData:
     for item in self.coordinates.items():
       self.canvas.putpixel(item[0], self.get_color(item[1]))
     self.canvas.save('test.png')
-    pass
     
   def forge_random_path(self):
     y_start = r.randrange(max(self.coordinates)[1]+1)
     self.paths.append(Path(self, (0, y_start)))
+    
+  def forge_all_paths(self):
+    for y in range(max(self.coordinates)[1]+1):
+      self.paths.append(Path(self, (0, y)))
+    
+    
+  def draw_paths(self):
+    for path in self.paths:
+      for location in path.path:
+        self.path_set.add(location)
+    for location in self.path_set:
+      self.canvas.putpixel(location, (255,0,0,255))
+      # print('painting')
+    self.canvas.save('test.png')
+    
+  def draw_best_path(self):
+    best_path = min(self.paths, key= lambda path:path.total_elevation_change)
+    print(best_path.total_elevation_change)
+    print("drawing best path")
+    for location in best_path.path:
+      self.canvas.putpixel(location, (0,255,0,255))
+    self.canvas.save('test.png')
 
 if __name__ == "__main__":
-  new_map = MapData('elevation_small.txt')
+  new_map = MapData('elevation_large.txt')
   new_map.assign_coordinates(new_map.data)
-  # new_map.draw_topo_map()
-  new_map.forge_random_path()
+  new_map.draw_topo_map()
+  # new_map.forge_random_path()
+  new_map.forge_all_paths()
+  new_map.draw_paths()
+  new_map.draw_best_path()
