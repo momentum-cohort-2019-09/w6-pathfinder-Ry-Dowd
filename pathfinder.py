@@ -1,7 +1,7 @@
 from PIL import Image
 import random as r
 # from multiprocessing import Pool
-
+import argparse
 
 class Path:
   """
@@ -17,7 +17,9 @@ class Path:
     self.elevation = self.coordinates[self.position]
     self.max_x = max_x
     self.max_y = max_y
+    self.negative_change = []
     self.walk()
+    
     
   def valid_steps(self):
     current_x = self.position[0] 
@@ -30,6 +32,16 @@ class Path:
     current_y = self.position[1]
     
     return[(current_x+1, choice) for choice in range(current_y-1, current_y+2)if (0 <= choice <= self.max_y)]
+  
+  def choose_downhill(self,options):
+    current_elevation = self.coordinates[self.position]
+    options_dict = {step:(current_elevation - self.coordinates[step]+r.random()) for step in options}
+    choice = min(options_dict.items(), key = lambda x:x[1])
+    self.elevation_change.append(int(choice[1]))
+    self.elevation = self.coordinates[choice[0]]
+    if int(choice[1]) <= 0:
+      self.negative_change.append('y')
+    return choice[0]
    
   def choose_step(self, options):
     current_elevation = self.coordinates[self.position]
@@ -66,7 +78,7 @@ class MapData:
       raw = data.readlines()
       rows = [row.split()for row in raw]
       for y in range(len(rows)):
-        for x in range(len(rows)):
+        for x in range(len(rows[0])):
           self.coordinates[(x,y)]=int(rows[y][x])
     self.min_elevation = self.get_min_elevation()
     self.max_elevation = self.get_max_elevation()
@@ -109,6 +121,7 @@ class MapData:
     
   def draw_best_path(self):
     best_path = min(self.paths, key= lambda path:path.total_elevation_change)
+    # best_path = max(self.paths, key = lambda path: len(path.negative_change))
     print(best_path.total_elevation_change)
     print("drawing best path")
     for location in best_path.path:
@@ -117,10 +130,11 @@ class MapData:
 
 
 if __name__ == "__main__":
+  # parser = argparse.ArgumentParser()
+  
   new_map = MapData('elevation_small.txt')
   new_map.assign_coordinates(new_map.data)
   new_map.draw_topo_map()
-  # new_map.forge_random_path()
   new_map.forge_all_paths()
   new_map.draw_paths()
   new_map.draw_best_path()
