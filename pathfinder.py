@@ -1,6 +1,7 @@
 from PIL import Image
 import random as r
-from multiprocessing import Pool
+# from multiprocessing import Pool
+
 
 class Path:
   """
@@ -39,7 +40,7 @@ class Path:
     return choice[0]
     
   def take_step(self):
-    options = self.valid_steps()
+    options = self.valid_forward_steps()
     self.position = self.choose_step(options)
     self.path.append(self.position)
     
@@ -90,9 +91,10 @@ class MapData:
     self.canvas.save('test.png')
     
   def forge_all_paths(self):
-    pool = Pool(processes = 4)
+    # pool = Pool(processes = 2)
     coords = [(0,y) for y in range(max(self.coordinates)[1]+1)]
-    self.paths = pool.map(self.forge_path, coords)
+    # self.paths = pool.map(self.forge_path, coords)
+    self.paths = [self.forge_path(coord) for coord in coords]
   
   def forge_path(self, start):
     return Path(self, start, self.size[0], self.size[1])
